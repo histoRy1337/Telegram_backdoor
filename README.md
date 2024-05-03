@@ -1,15 +1,19 @@
 # Telegram_backdoor
 
-This is a Windows-only backdoor that you can control through a Telegram BOT
+This is a Windows-only backdoor that you can control through a Telegram bot.
 
-
-What's on the menue ? 
+What's on the menu ? 
 - Reverse Shell
 - Screenshots
 - Keylogger
-- File transfer
+- File transfert
 - Purge
 
-How to create a Telegram bot ? 
+The commands are listed in the /man command.
 
-Contact GodFather on Telegram, get your token, call the getUpdates API and get your chat_id. Fill the credentals.txt file with them.
+How to create the Telegram bot ? 
+
+Contact GodFather on Telegram, generate your bot and your token. 
+Call the getUpdates API page : https://api.telegram.org/bot{TOKEN}/getUpdates and get your chat_id. 
+Fill the credentials.txt file with the datas.
+The backdoor is ready be used.
