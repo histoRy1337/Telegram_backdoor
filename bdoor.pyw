@@ -23,8 +23,7 @@ Envoyer photo ou document
 
 def takeWebcamPhoto():
 	
-	sendMessage("En cours...")
-	cam = cv2.VideoCapture(0) 
+	cam = cv2.VideoCapture(0, cv2.CAP_DSHOW) 
 	result, image = cam.read() 
 	if result:
 		cv2.imwrite(f"{maindir}\\webcam_capture.png", image)
