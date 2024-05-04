@@ -7,7 +7,9 @@ What's on the menu ?
 - Screenshots
 - Keylogger
 - File transfert
+- Webcam photo capture
 - Purge
+- And more coming..!
 
 The commands are listed in the /man command.
 
