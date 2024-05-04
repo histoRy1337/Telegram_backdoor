@@ -17,3 +17,5 @@ How to create the Telegram bot ?
 - Call the getUpdates API page : https://api.telegram.org/bot{TOKEN}/getUpdates and get your chat_id.
 - Fill the credentials.txt file with the datas.
 - The backdoor is ready be used.
+
+Disclaimer : This backdoor is not meant to infect anybody that does not consent. I use it for my personnal monitoring needs, which are my workplace and my home. Windows defender blocks it anyways if you try to use it as an executable.
