@@ -75,11 +75,10 @@ def recordSound():
 	wf.writeframes(b''.join(frames))
 	wf.close()
 	
-	
-	#sound = pydub.AudioSegment.from_wav(filename)
-	#sound.export(filename_mp3, format='mp3')
-	
 	ffmpeg.input(filename).output(filename_mp3, loglevel="quiet").run(overwrite_output=True)
+	
+	os.remove(filename)
+	
 	sendDocument(filename_mp3)
 	
 
