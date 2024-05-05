@@ -8,6 +8,7 @@ What's on the menu ?
 - Keylogger
 - File transfert
 - Webcam photo capture
+- Microphone sound recording
 - Purge
 - And more coming..!
 
