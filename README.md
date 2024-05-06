@@ -15,10 +15,12 @@ What's on the menu ?
 The commands are listed in the /man command.
 
 How to make it work ?
+
 Copy the .py file, the credentials.txt file (and ffmpeg.exe if you want to record the microphone) in any directory.
 
 
 How to create the Telegram bot ? 
+
 - Contact BotFather on Telegram, generate your bot and your token. 
 - Call the getUpdates API page : https://api.telegram.org/bot{TOKEN}/getUpdates and get your chat_id.
 - Fill the credentials.txt file with the datas.
