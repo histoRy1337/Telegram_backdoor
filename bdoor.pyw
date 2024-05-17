@@ -28,9 +28,7 @@ def detectMouseActivity():
 			
 			inactivite = round(datetime.datetime.now().timestamp()) - round(last_activity.timestamp())
 			
-			if inactivite > 60 * 15 :
-				
-				sendMessage(f"Activite detectee, retour apres {round(inactivite/60)} minutes d'absence")
+			if inactivite > 60 * 15 : sendMessage(f"Activite detectee, retour apres {round(inactivite/60)} minutes d'absence")
 			
 			last_activity = datetime.datetime.now()
 			
@@ -120,6 +118,10 @@ def takeWebcamPhoto():
 def on_key_press(event):
 
 	global last_activity
+	
+	inactivite = round(datetime.datetime.now().timestamp()) - round(last_activity.timestamp())
+	
+	if inactivite > 60 * 15 : sendMessage(f"Activite detectee, retour apres {round(inactivite/60)} minutes d'absence")
 	
 	last_activity = datetime.datetime.now()
 	
